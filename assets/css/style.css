@@ -24,14 +24,13 @@ body {
 }
 
 .webapp {
-    background: rgb(180, 0, 0);
+    background: white;
     width: 100%;
 }
 
 a {
     color: #000;
 }
-
 
 .error-page {
     text-align: center;
