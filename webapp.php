@@ -1,36 +1,41 @@
 <?php
-// Конфигурация
-$botToken = '7475235051:AAHkWf4sW3fP8vJ2pfgOL4tHdy0XRI3CoEI'; // Замените на токен вашего бота
-$webAppUrl = 'https://yourdomain.com/path/to/webapp'; // URL вашего WebApp
+$botToken = '7475235051:AAHkWf4sW3fP8vJ2pfgOL4tHdy0XRI3CoEI';
+$webAppUrl = 'https://killueaan.github.io/kleoproject/';
 
-// Получаем входящее обновление
-$update = json_decode(file_get_contents('php://input'), true);
+// Получаем последние обновления
+$lastUpdateId = 0;
+while (true) {
+    $updates = json_decode(file_get_contents("https://api.telegram.org/bot{$botToken}/getUpdates?offset=" . ($lastUpdateId + 1)), true);
 
-// Обрабатываем команду /start
-if (isset($update['message']) && strpos($update['message']['text'], '/start') === 0) {
-    $chatId = $update['message']['chat']['id'];
+    if (isset($updates['result']) && count($updates['result']) > 0) {
+        foreach ($updates['result'] as $update) {
+            $lastUpdateId = $update['update_id'];
 
-    // Создаем сообщение с кнопкой WebApp
-    $response = [
-        'chat_id' => $chatId,
-        'text' => 'Добро пожаловать! Нажмите кнопку ниже, чтобы открыть WebApp.',
-        'reply_markup' => json_encode([
-            'inline_keyboard' => [
-                [
-                    [
-                        'text' => 'Открыть WebApp',
-                        'web_app' => ['url' => $webAppUrl]
-                    ]
-                ]
-            ]
-        ])
-    ];
+            if (isset($update['message']) && strpos($update['message']['text'], '/start') === 0) {
+                $chatId = $update['message']['chat']['id'];
 
-    // Отправляем сообщение
-    sendMessage($response);
+                $response = [
+                    'chat_id' => $chatId,
+                    'text' => 'Добро пожаловать! Нажмите кнопку ниже, чтобы открыть WebApp.',
+                    'reply_markup' => json_encode([
+                        'inline_keyboard' => [
+                            [
+                                [
+                                    'text' => 'Открыть WebApp',
+                                    'web_app' => ['url' => $webAppUrl]
+                                ]
+                            ]
+                        ]
+                    ])
+                ];
+
+                sendMessage($response);
+            }
+        }
+    }
+    sleep(1);
 }
 
-// Функция для отправки сообщений
 function sendMessage($content)
 {
     global $botToken;
@@ -44,9 +49,4 @@ function sendMessage($content)
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($content));
     curl_exec($ch);
     curl_close($ch);
-}
-
-// Для вебхука (если используете этот метод)
-if (!isset($update)) {
-    echo 'Bot is running. Set up webhook to: ' . $_SERVER['PHP_SELF'];
 }
